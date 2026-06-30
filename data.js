@@ -146,3 +146,34 @@ function getFlagImg(teamName, cssClass = 'inline-block w-6 h-4 object-cover roun
   if (!url) return '';
   return `<img src="${url}" alt="${teamName}" class="${cssClass}" loading="lazy" onerror="this.style.display='none'">`;
 }
+
+// YouTube search name overrides for better results
+const YT_SEARCH_NAMES = {
+  'USA': 'United States',
+  'South Korea': 'Korea Republic',
+  'Bosnia & Herzegovina': 'Bosnia',
+  'DR Congo': 'DR Congo',
+  'Czech Republic': 'Czechia',
+  'Ivory Coast': "Côte d'Ivoire",
+};
+
+// FIFA YouTube channel ID
+const FIFA_CHANNEL_ID = 'UCpcTrCXblq78GZrTUTLWeBw';
+
+// Build a YouTube search URL scoped to the FIFA channel
+function getYouTubeSearchUrl(team1, team2, type) {
+  const t1 = YT_SEARCH_NAMES[team1] || team1;
+  const t2 = YT_SEARCH_NAMES[team2] || team2;
+  const suffix = type === 'highlights' ? 'highlights' : 'preview';
+  const query = `${t1} vs ${t2} ${suffix} FIFA World Cup 2026`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+}
+
+// Build a YouTube embed search URL for the modal (uses /embed with search)
+function getYouTubeEmbedSearchUrl(team1, team2) {
+  const t1 = YT_SEARCH_NAMES[team1] || team1;
+  const t2 = YT_SEARCH_NAMES[team2] || team2;
+  const query = `${t1} vs ${t2} highlights FIFA World Cup 2026`;
+  // Link to YouTube search filtered to videos
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+}

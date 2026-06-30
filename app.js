@@ -434,6 +434,8 @@ function renderMatchCard(match, type) {
       ? '<span class="text-xs text-gray-400">(aet)</span>'
       : '';
 
+    const ytUrl = getYouTubeSearchUrl(home, away, 'highlights');
+
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-3">
@@ -460,10 +462,18 @@ function renderMatchCard(match, type) {
             ${awayFlag}
           </div>
         </div>
-        ${isDraw ? '<div class="text-center mt-2"><span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-full">Draw</span></div>' : ''}
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+          ${isDraw ? '<span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-full">Draw</span>' : '<span></span>'}
+          <a href="${ytUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path fill="#fff" d="M9.545 15.568V8.432L15.818 12z"/></svg>
+            Highlights
+          </a>
+        </div>
       </div>
     `;
   } else {
+    const ytUrl = getYouTubeSearchUrl(home, away, 'preview');
+
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-3">
@@ -484,6 +494,12 @@ function renderMatchCard(match, type) {
             <span class="font-medium text-sm text-gray-700 truncate">${away}</span>
             ${awayFlag}
           </div>
+        </div>
+        <div class="flex justify-end mt-3 pt-3 border-t border-gray-50">
+          <a href="${ytUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path fill="#fff" d="M9.545 15.568V8.432L15.818 12z"/></svg>
+            Preview
+          </a>
         </div>
       </div>
     `;
