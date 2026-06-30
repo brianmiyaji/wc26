@@ -6,6 +6,8 @@ const DATA_URL = 'https://raw.githubusercontent.com/openfootball/world-cup.json/
 const CACHE_KEY = 'wc26_matches';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+const JST_TZ = 'Asia/Tokyo';
+
 let allMatches = [];
 let activeTab = 'leaderboard';
 let filterStage = 'all';
@@ -46,6 +48,46 @@ async function fetchMatches() {
   } finally {
     showLoading(false);
   }
+}
+
+// ============================================================
+// Date/Time Helpers (JST)
+// ============================================================
+
+// Parse match date + time string (e.g. "2026-06-11" + "13:00 UTC-6") into a Date object
+function parseMatchDateTime(dateStr, timeStr) {
+  if (!timeStr) return new Date(dateStr + 'T00:00:00+09:00'); // default to JST midnight
+  // Parse "HH:MM UTC-N" or "HH:MM UTC+N"
+  const m = timeStr.match(/^(\d{1,2}):(\d{2})\s*UTC([+-]\d+)$/);
+  if (!m) return new Date(dateStr + 'T00:00:00+09:00');
+  const hours = parseInt(m[1]);
+  const minutes = m[2];
+  const utcOffset = parseInt(m[3]);
+  // Build ISO string with the given offset
+  const sign = utcOffset <= 0 ? '+' : '-';
+  const absOffset = Math.abs(utcOffset);
+  const offsetStr = `${sign}${String(absOffset).padStart(2, '0')}:00`;
+  return new Date(`${dateStr}T${String(hours).padStart(2, '0')}:${minutes}:00${offsetStr}`);
+}
+
+// Format a Date to JST time string like "4:00 AM"
+function formatTimeJST(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: JST_TZ });
+}
+
+// Format a Date to JST date string like "Thu, Jun 12"
+function formatDateJST(date) {
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: JST_TZ });
+}
+
+// Format a Date to JST date string for grouping like "Thu, Jun 12, 2026"
+function formatDateGroupJST(date) {
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: JST_TZ });
+}
+
+// Format a Date to short JST date like "Jun 12"
+function formatDateShortJST(date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: JST_TZ });
 }
 
 // ============================================================
@@ -361,8 +403,8 @@ function renderMatchList(containerId, type) {
 
   // Sort: finished = most recent first, upcoming = soonest first
   filtered.sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
+    const dateA = parseMatchDateTime(a.date, a.time);
+    const dateB = parseMatchDateTime(b.date, b.time);
     return type === 'finished' ? dateB - dateA : dateA - dateB;
   });
 
@@ -376,13 +418,11 @@ function renderMatchList(containerId, type) {
     return;
   }
 
-  // Group by date
+  // Group by date (JST)
   const grouped = {};
   for (const match of filtered) {
-    const dateObj = new Date(match.date + 'T00:00:00');
-    const date = dateObj.toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    });
+    const matchDate = parseMatchDateTime(match.date, match.time);
+    const date = formatDateGroupJST(matchDate);
     if (!grouped[date]) grouped[date] = [];
     grouped[date].push(match);
   }
@@ -419,7 +459,8 @@ function renderMatchCard(match, type) {
   const stageLabel = formatStage(stage);
   const groupLabel = match.group ? ` &middot; ${match.group}` : '';
   const groundLabel = match.ground ? ` &middot; ${match.ground}` : '';
-  const time = match.time || '';
+  const matchDate = parseMatchDateTime(match.date, match.time);
+  const time = match.time ? formatTimeJST(matchDate) : '';
 
   if (type === 'finished') {
     const display = getDisplayScore(match);
@@ -585,7 +626,7 @@ function renderTeamMatchHistory(team) {
     ${team.matches.map(m => {
       const opponentFlag = getFlagImg(m.opponent, 'inline-block w-5 h-3.5 object-cover rounded-sm');
       const resultClass = m.result === 'W' ? 'bg-green-100 text-green-700' : m.result === 'D' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600';
-      const dateStr = new Date(m.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dateStr = formatDateShortJST(parseMatchDateTime(m.date, m.time));
       const stageLabel = formatStage(m.stage);
 
       return `
@@ -654,7 +695,7 @@ function showError(msg) {
 function updateLastRefresh() {
   const el = document.getElementById('last-refresh');
   if (el) {
-    el.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    el.textContent = `Updated ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: JST_TZ })} JST`;
   }
 }
 
