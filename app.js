@@ -9,6 +9,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const JST_TZ = 'Asia/Tokyo';
 
 let allMatches = [];
+const VALID_TABS = ['leaderboard', 'players', 'results', 'upcoming', 'teams'];
 let activeTab = 'leaderboard';
 let filterStage = 'all';
 let filterPlayer = 'all';
@@ -654,8 +655,11 @@ function renderTeamMatchHistory(team) {
 // UI Helpers
 // ============================================================
 
-function setActiveTab(tab) {
+function setActiveTab(tab, updateHash = true) {
   activeTab = tab;
+  if (updateHash) {
+    history.replaceState(null, '', '#' + tab);
+  }
   document.querySelectorAll('[data-tab]').forEach(el => {
     const isActive = el.dataset.tab === tab;
     el.classList.toggle('border-blue-500', isActive);
@@ -741,6 +745,19 @@ async function refreshData() {
   renderApp();
 }
 
+function getTabFromHash() {
+  const hash = location.hash.replace('#', '');
+  return VALID_TABS.includes(hash) ? hash : 'leaderboard';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  activeTab = getTabFromHash();
   refreshData();
+});
+
+window.addEventListener('hashchange', () => {
+  const tab = getTabFromHash();
+  if (tab !== activeTab) {
+    setActiveTab(tab, false);
+  }
 });
