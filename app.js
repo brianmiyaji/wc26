@@ -64,8 +64,8 @@ function parseMatchDateTime(dateStr, timeStr) {
   const hours = parseInt(m[1]);
   const minutes = m[2];
   const utcOffset = parseInt(m[3]);
-  // Build ISO string with the given offset
-  const sign = utcOffset <= 0 ? '+' : '-';
+  // Build ISO string with the given offset (UTC-6 → -06:00)
+  const sign = utcOffset >= 0 ? '+' : '-';
   const absOffset = Math.abs(utcOffset);
   const offsetStr = `${sign}${String(absOffset).padStart(2, '0')}:00`;
   return new Date(`${dateStr}T${String(hours).padStart(2, '0')}:${minutes}:00${offsetStr}`);
