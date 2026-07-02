@@ -812,6 +812,11 @@ function renderCharts() {
   const positionCtx = document.getElementById('position-chart');
   if (!pointsCtx || !positionCtx) return;
 
+  const dark = isDarkMode();
+  const tickColor = dark ? '#9ca3af' : undefined;
+  const titleColor = dark ? '#d1d5db' : undefined;
+  const legendColor = dark ? '#d1d5db' : undefined;
+
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -825,6 +830,7 @@ function renderCharts() {
         labels: {
           usePointStyle: true,
           padding: 16,
+          color: legendColor,
           font: { family: 'Inter, system-ui, sans-serif', size: 12 }
         }
       }
@@ -832,7 +838,7 @@ function renderCharts() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 10 }, maxRotation: 45 }
+        ticks: { color: tickColor, font: { family: 'Inter, system-ui, sans-serif', size: 10 }, maxRotation: 45 }
       }
     }
   };
@@ -860,14 +866,16 @@ function renderCharts() {
         ...commonOptions.scales,
         y: {
           beginAtZero: true,
-          grid: { color: '#f3f4f6' },
+          grid: { color: isDarkMode() ? '#374151' : '#f3f4f6' },
           ticks: {
             stepSize: 3,
+            color: tickColor,
             font: { family: 'Inter, system-ui, sans-serif', size: 11 }
           },
           title: {
             display: true,
             text: 'Total Points',
+            color: titleColor,
             font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: '600' }
           }
         }
@@ -900,9 +908,10 @@ function renderCharts() {
           reverse: true,
           min: 0.5,
           max: PLAYERS.length + 0.5,
-          grid: { color: '#f3f4f6' },
+          grid: { color: isDarkMode() ? '#374151' : '#f3f4f6' },
           ticks: {
             stepSize: 1,
+            color: tickColor,
             font: { family: 'Inter, system-ui, sans-serif', size: 11 },
             callback: (val) => {
               const suffixes = { 1: 'st', 2: 'nd', 3: 'rd' };
@@ -912,12 +921,37 @@ function renderCharts() {
           title: {
             display: true,
             text: 'Position',
+            color: titleColor,
             font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: '600' }
           }
         }
       }
     }
   });
+}
+
+// ============================================================
+// Dark Mode
+// ============================================================
+
+function isDarkMode() {
+  return document.documentElement.classList.contains('dark');
+}
+
+function toggleDarkMode() {
+  const dark = !isDarkMode();
+  document.documentElement.classList.toggle('dark', dark);
+  localStorage.setItem('wc26_theme', dark ? 'dark' : 'light');
+  updateDarkModeBtn();
+  // Re-render charts with correct colors
+  renderCharts();
+}
+
+function updateDarkModeBtn() {
+  const btn = document.getElementById('dark-mode-btn');
+  if (btn) {
+    btn.innerHTML = isDarkMode() ? '&#9788;' : '&#9790;';
+  }
 }
 
 // ============================================================
@@ -1021,6 +1055,7 @@ function getTabFromHash() {
 
 document.addEventListener('DOMContentLoaded', () => {
   activeTab = getTabFromHash();
+  updateDarkModeBtn();
   refreshData();
 });
 

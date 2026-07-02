@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WC 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -12,34 +15,68 @@
     .tab-btn { transition: all 0.2s; }
     .fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+    /* Dark mode overrides for JS-rendered content */
+    .dark .bg-white { background-color: #1f2937 !important; }
+    .dark .bg-gray-50 { background-color: #111827 !important; }
+    .dark .bg-gray-100 { background-color: #374151 !important; }
+    .dark .border-gray-100 { border-color: #374151 !important; }
+    .dark .border-gray-50 { border-color: #1f2937 !important; }
+    .dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1f2937 !important; }
+    .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #374151 !important; }
+    .dark .text-gray-900 { color: #f9fafb !important; }
+    .dark .text-gray-700 { color: #d1d5db !important; }
+    .dark .text-gray-600 { color: #9ca3af !important; }
+    .dark .text-gray-500 { color: #9ca3af !important; }
+    .dark .text-gray-400 { color: #6b7280 !important; }
+    .dark .text-gray-300 { color: #4b5563 !important; }
+    .dark .hover\:bg-gray-50:hover { background-color: #374151 !important; }
+    .dark .hover\:bg-gray-200:hover { background-color: #4b5563 !important; }
+    .dark .bg-yellow-50 { background-color: rgba(234, 179, 8, 0.15) !important; }
+    .dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.2) !important; }
+    .dark .bg-yellow-100 { background-color: rgba(234, 179, 8, 0.2) !important; }
+    .dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; }
   </style>
+  <script>
+    // Apply dark mode before page renders to prevent flash
+    (function() {
+      const stored = localStorage.getItem('wc26_theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
 
   <!-- Header -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+          <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
             &#9917; WC 2026
           </h1>
-          <p class="text-sm text-gray-500 mt-0.5">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Jun 11 &ndash; Jul 19, 2026 &middot; Times in JST
           </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <span id="last-refresh" class="text-xs text-gray-400 hidden sm:inline"></span>
-          <button onclick="forceRefresh()" class="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors" title="Force refresh data">
+          <button onclick="forceRefresh()" class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="Force refresh data">
             &#8635; Refresh
           </button>
-          <button id="auto-refresh-btn" onclick="toggleAutoRefresh()" class="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-            &#8635; Auto-refresh: Off
+          <button id="auto-refresh-btn" onclick="toggleAutoRefresh()" class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            &#8635; Auto
+          </button>
+          <button onclick="toggleDarkMode()" class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="Toggle dark mode" id="dark-mode-btn">
+            &#9790;
           </button>
         </div>
       </div>
@@ -69,7 +106,7 @@
   </header>
 
   <!-- Error Banner -->
-  <div id="error-banner" class="hidden bg-red-50 border-b border-red-200 text-red-700 text-sm px-4 py-3 text-center"></div>
+  <div id="error-banner" class="hidden bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm px-4 py-3 text-center"></div>
 
   <!-- Loading -->
   <div id="loading" class="hidden">
@@ -85,7 +122,7 @@
     <!-- Leaderboard Section -->
     <section data-section="leaderboard" class="fade-in">
       <div class="mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Leaderboard</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Leaderboard</h2>
       </div>
       <div id="leaderboard-content" class="space-y-3">
         <!-- Rendered by JS -->
@@ -95,7 +132,7 @@
     <!-- Players Section -->
     <section data-section="players" class="hidden fade-in">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Player Details</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Player Details</h2>
       </div>
       <div id="players-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered by JS -->
@@ -105,9 +142,9 @@
     <!-- Results Section -->
     <section data-section="results" class="hidden fade-in">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Match Results</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Match Results</h2>
         <div class="flex gap-2">
-          <select id="filter-stage" onchange="applyFilters()" class="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select id="filter-stage" onchange="applyFilters()" class="text-xs px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="all">All Stages</option>
             <option value="GROUP_STAGE">Group Stage</option>
             <option value="LAST_32">Round of 32</option>
@@ -117,7 +154,7 @@
             <option value="THIRD_PLACE">3rd Place</option>
             <option value="FINAL">Final</option>
           </select>
-          <select id="filter-player" onchange="applyFilters()" class="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select id="filter-player" onchange="applyFilters()" class="text-xs px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="all">All Players</option>
             <option value="alex">Alex</option>
             <option value="david">David R.</option>
@@ -136,9 +173,9 @@
     <!-- Upcoming Section -->
     <section data-section="upcoming" class="hidden fade-in">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Upcoming Matches</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Upcoming Matches</h2>
         <div class="flex gap-2">
-          <select onchange="document.getElementById('filter-stage').value=this.value; applyFilters()" class="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select onchange="document.getElementById('filter-stage').value=this.value; applyFilters()" class="text-xs px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="all">All Stages</option>
             <option value="GROUP_STAGE">Group Stage</option>
             <option value="LAST_32">Round of 32</option>
@@ -148,7 +185,7 @@
             <option value="THIRD_PLACE">3rd Place</option>
             <option value="FINAL">Final</option>
           </select>
-          <select onchange="document.getElementById('filter-player').value=this.value; applyFilters()" class="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select onchange="document.getElementById('filter-player').value=this.value; applyFilters()" class="text-xs px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="all">All Players</option>
             <option value="alex">Alex</option>
             <option value="david">David R.</option>
@@ -167,14 +204,14 @@
     <!-- Charts Section -->
     <section data-section="charts" class="hidden fade-in">
       <div class="mb-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Points Over Time</h2>
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Points Over Time</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
           <canvas id="points-chart" height="300"></canvas>
         </div>
       </div>
       <div class="mb-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Position Over Time</h2>
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Position Over Time</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
           <canvas id="position-chart" height="300"></canvas>
         </div>
       </div>
@@ -183,8 +220,8 @@
     <!-- Teams Section -->
     <section data-section="teams" class="hidden fade-in">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-900">All Teams</h2>
-        <p class="text-xs text-gray-400">Click a team to see match history</p>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">All Teams</h2>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Click a team to see match history</p>
       </div>
       <div id="teams-content">
         <!-- Rendered by JS -->
@@ -194,8 +231,8 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-gray-100 mt-12">
-    <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-gray-400">
+  <footer class="border-t border-gray-100 dark:border-gray-700 mt-12">
+    <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-gray-400 dark:text-gray-500">
       WC 2026 &middot; Match data from
       <a href="https://github.com/openfootball/world-cup.json" target="_blank" class="text-blue-500 hover:underline">openfootball</a>
     </div>
