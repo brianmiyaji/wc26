@@ -844,8 +844,8 @@ function renderCharts() {
         ...commonOptions.scales,
         y: {
           reverse: true,
-          min: 1,
-          max: PLAYERS.length,
+          min: 0.5,
+          max: PLAYERS.length + 0.5,
           grid: { color: '#f3f4f6' },
           ticks: {
             stepSize: 1,
