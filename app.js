@@ -794,8 +794,8 @@ function renderCharts() {
         borderColor: pt.player.color,
         backgroundColor: pt.player.color + '20',
         borderWidth: 2.5,
-        pointRadius: 3,
-        pointHoverRadius: 6,
+        pointRadius: 0,
+        pointHoverRadius: 4,
         tension: 0.3,
         fill: false,
       }))
@@ -832,8 +832,8 @@ function renderCharts() {
         borderColor: player.color,
         backgroundColor: player.color + '20',
         borderWidth: 2.5,
-        pointRadius: 3,
-        pointHoverRadius: 6,
+        pointRadius: 0,
+        pointHoverRadius: 4,
         tension: 0.3,
         fill: false,
       }))
