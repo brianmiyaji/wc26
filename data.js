@@ -120,6 +120,70 @@ const FLAG_CODES = {
   'Czech Republic': 'cz',
 };
 
+// Team prices (in yen)
+const TEAM_PRICES = {
+  'USA': 1000,
+  'DR Congo': 300,
+  'Canada': 1000,
+  'New Zealand': 500,
+  'France': 3900,
+  'Japan': 1700,
+  'Germany': 1300,
+  'Brazil': 2000,
+  'Jordan': 200,
+  'Uzbekistan': 400,
+  'Australia': 1100,
+  'South Africa': 600,
+  'Mexico': 1400,
+  'Egypt': 800,
+  'Austria': 500,
+  'Iran': 400,
+  'Qatar': 300,
+  'Paraguay': 500,
+  'Curaçao': 300,
+  'Ivory Coast': 700,
+  'Norway': 2400,
+  'Ecuador': 1000,
+  'Belgium': 2200,
+  'Senegal': 1100,
+  'Turkey': 1000,
+  'Uruguay': 1700,
+  'South Korea': 1000,
+  'Netherlands': 2600,
+  'Portugal': 3000,
+  'Croatia': 1100,
+  'Switzerland': 800,
+  'Tunisia': 1500,
+  'Panama': 500,
+  'Saudi Arabia': 600,
+  'England': 4000,
+  'Haiti': 500,
+  'Argentina': 3000,
+  'Bosnia & Herzegovina': 400,
+  'Algeria': 400,
+  'Scotland': 400,
+  'Cape Verde': 300,
+  'Sweden': 700,
+  'Colombia': 1400,
+  'Morocco': 1700,
+  'Spain': 3300,
+  'Ghana': 500,
+  'Iraq': 300,
+  'Czech Republic': 1000,
+};
+
+// Calculate PPKY (Points Per Thousand Yen) - points / price * 1000
+function calcPPKY(points, price) {
+  if (!price || points === 0) return 0;
+  return points / price * 1000;
+}
+
+function formatPPKY(ppky) {
+  if (ppky === 0) return '0';
+  const rounded = Math.round(ppky * 10) / 10;
+  return rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1);
+}
+
 // Build reverse lookup: team name → player
 const TEAM_TO_PLAYER = {};
 for (const player of PLAYERS) {

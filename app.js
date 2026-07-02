@@ -324,7 +324,7 @@ function renderLeaderboard(scores) {
         </div>
         <div class="text-right shrink-0">
           <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L</div>
+          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L &middot; ${formatPPKY(calcPPKY(player.totalPoints, player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0)))} PPKY</div>
         </div>
       </div>
     `;
@@ -341,12 +341,14 @@ function renderPlayerCards(scores) {
       const record = team.matches.length > 0
         ? `<span class="text-xs text-gray-400">${team.wins}W ${team.draws}D ${team.losses}L</span>`
         : '<span class="text-xs text-gray-300">No matches yet</span>';
+      const price = TEAM_PRICES[team.name] || 0;
 
       return `
         <div class="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
           <div class="flex items-center gap-2">
             ${flag}
             <span class="text-sm font-medium text-gray-700">${team.name}</span>
+            <span class="text-xs text-gray-400">&yen;${price.toLocaleString()}</span>
             ${champBadge}
           </div>
           <div class="flex items-center gap-3">
@@ -357,6 +359,9 @@ function renderPlayerCards(scores) {
       `;
     }).join('');
 
+    const totalSpent = player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0);
+    const playerPPKY = calcPPKY(player.totalPoints, totalSpent);
+
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-gray-50 flex items-center gap-3">
@@ -365,11 +370,11 @@ function renderPlayerCards(scores) {
           </div>
           <div>
             <div class="font-bold text-gray-900">${player.name}</div>
-            <div class="text-sm text-gray-500">${player.teams.length} teams</div>
+            <div class="text-sm text-gray-500">${player.teams.length} teams &middot; &yen;${totalSpent.toLocaleString()}</div>
           </div>
           <div class="ml-auto text-right">
             <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-            <div class="text-xs text-gray-400">points</div>
+            <div class="text-xs text-gray-400">pts &middot; ${formatPPKY(playerPPKY)} PPKY</div>
           </div>
         </div>
         <div class="p-3 divide-y divide-gray-50">
@@ -563,11 +568,13 @@ function renderTeamStandings(scores) {
     const champBadge = team.isChampion ? ' <span class="text-yellow-500">&#9733;</span>' : '';
     const gd = team.goalsFor - team.goalsAgainst;
     const chevron = `<span class="text-gray-300 text-xs">${expanded ? '&#9660;' : '&#9654;'}</span>`;
+    const price = TEAM_PRICES[team.name] || 0;
+    const ppky = calcPPKY(team.totalPoints, price);
 
     let matchHistory = '';
     if (expanded) {
       matchHistory = `
-        <tr><td colspan="11" class="px-6 py-3 bg-gray-50 border-l-4" style="border-left-color: ${team.player.color}">
+        <tr><td colspan="14" class="px-6 py-3 bg-gray-50 border-l-4" style="border-left-color: ${team.player.color}">
           ${renderTeamMatchHistory(team)}
         </td></tr>
       `;
@@ -594,7 +601,9 @@ function renderTeamStandings(scores) {
         <td class="text-center py-3 px-2 text-sm text-gray-700">${team.goalsFor}</td>
         <td class="text-center py-3 px-2 text-sm text-gray-700">${team.goalsAgainst}</td>
         <td class="text-center py-3 px-2 text-sm font-medium ${gd > 0 ? 'text-green-600' : gd < 0 ? 'text-red-500' : 'text-gray-400'}">${gd > 0 ? '+' : ''}${gd}</td>
-        <td class="text-right py-3 px-4 text-sm font-bold text-gray-900">${team.totalPoints}</td>
+        <td class="text-right py-3 px-2 text-sm font-bold text-gray-900">${team.totalPoints}</td>
+        <td class="text-right py-3 px-2 text-sm text-gray-500">&yen;${price.toLocaleString()}</td>
+        <td class="text-right py-3 px-4 text-sm font-medium ${ppky > 0 ? 'text-blue-600' : 'text-gray-300'}">${formatPPKY(ppky)}</td>
       </tr>
       ${matchHistory}
     `;
@@ -602,7 +611,7 @@ function renderTeamStandings(scores) {
 
   container.innerHTML = `
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
-      <table class="w-full min-w-[700px]">
+      <table class="w-full min-w-[850px]">
         <thead>
           <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
             <th class="py-3 px-3 w-8"></th>
@@ -616,7 +625,9 @@ function renderTeamStandings(scores) {
             <th class="text-center py-3 px-2">GF</th>
             <th class="text-center py-3 px-2">GA</th>
             <th class="text-center py-3 px-2">GD</th>
-            <th class="text-right py-3 px-4">Pts</th>
+            <th class="text-right py-3 px-2">Pts</th>
+            <th class="text-right py-3 px-2">Price</th>
+            <th class="text-right py-3 px-4">PPKY</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
