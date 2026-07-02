@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WC 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -56,6 +57,9 @@
         </button>
         <button data-tab="upcoming" onclick="setActiveTab('upcoming')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">
           Upcoming
+        </button>
+        <button data-tab="charts" onclick="setActiveTab('charts')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">
+          Charts
         </button>
         <button data-tab="teams" onclick="setActiveTab('teams')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">
           All Teams
@@ -157,6 +161,22 @@
       </div>
       <div id="upcoming-content">
         <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section data-section="charts" class="hidden fade-in">
+      <div class="mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Points Over Time</h2>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <canvas id="points-chart" height="300"></canvas>
+        </div>
+      </div>
+      <div class="mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Position Over Time</h2>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <canvas id="position-chart" height="300"></canvas>
+        </div>
       </div>
     </section>
 

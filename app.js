@@ -9,7 +9,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const JST_TZ = 'Asia/Tokyo';
 
 let allMatches = [];
-const VALID_TABS = ['leaderboard', 'players', 'results', 'upcoming', 'teams'];
+const VALID_TABS = ['leaderboard', 'players', 'results', 'upcoming', 'charts', 'teams'];
 let activeTab = 'leaderboard';
 let filterStage = 'all';
 let filterPlayer = 'all';
@@ -280,6 +280,7 @@ function renderApp() {
   renderLeaderboard(scores);
   renderPlayerCards(scores);
   renderMatches();
+  renderCharts();
   renderTeamStandings(scores);
   updateLastRefresh();
   setActiveTab(activeTab);
@@ -657,6 +658,212 @@ function renderTeamMatchHistory(team) {
       `;
     }).join('')}
   </div>`;
+}
+
+// ============================================================
+// Charts
+// ============================================================
+
+let pointsChart = null;
+let positionChart = null;
+
+function buildTimelineData() {
+  // Get all unique match dates (finished matches only), sorted chronologically
+  const finishedMatches = allMatches.filter(m => isFinished(m));
+  const dateSet = new Set();
+  for (const m of finishedMatches) {
+    dateSet.add(m.date);
+  }
+  const dates = [...dateSet].sort();
+
+  if (dates.length === 0) return null;
+
+  // For each date, calculate cumulative points for each player
+  const playerTimelines = PLAYERS.map(player => {
+    const pointsByDate = [];
+    let cumulative = 0;
+
+    for (const date of dates) {
+      // Get matches on this date involving this player's teams
+      const dayMatches = finishedMatches.filter(m => m.date === date);
+      let dayPoints = 0;
+
+      for (const match of dayMatches) {
+        const home = normalizeTeamName(match.team1);
+        const away = normalizeTeamName(match.team2);
+        const isHome = player.teams.includes(home);
+        const isAway = player.teams.includes(away);
+        if (!isHome && !isAway) continue;
+
+        const winner = getMatchWinner(match);
+        if (winner === 'draw') {
+          dayPoints += 1;
+        } else if (
+          (isHome && winner === 'team1') ||
+          (isAway && winner === 'team2')
+        ) {
+          dayPoints += 3;
+        }
+      }
+
+      cumulative += dayPoints;
+      pointsByDate.push(cumulative);
+    }
+
+    return {
+      player,
+      points: pointsByDate
+    };
+  });
+
+  // Calculate positions at each date
+  const positionTimelines = PLAYERS.map((_, pi) => []);
+  for (let di = 0; di < dates.length; di++) {
+    // Get points at this date for all players, sort descending
+    const standings = playerTimelines.map((pt, pi) => ({
+      pi,
+      pts: pt.points[di]
+    })).sort((a, b) => b.pts - a.pts);
+
+    // Assign ranks with ties
+    let rank = 1;
+    for (let i = 0; i < standings.length; i++) {
+      if (i > 0 && standings[i].pts < standings[i - 1].pts) {
+        rank = i + 1;
+      }
+      positionTimelines[standings[i].pi].push(rank);
+    }
+  }
+
+  // Format date labels
+  const labels = dates.map(d => {
+    const dateObj = new Date(d + 'T12:00:00+09:00');
+    return formatDateShortJST(dateObj);
+  });
+
+  return { labels, playerTimelines, positionTimelines };
+}
+
+function renderCharts() {
+  const data = buildTimelineData();
+  if (!data) return;
+
+  const { labels, playerTimelines, positionTimelines } = data;
+
+  // Destroy existing charts
+  if (pointsChart) { pointsChart.destroy(); pointsChart = null; }
+  if (positionChart) { positionChart.destroy(); positionChart = null; }
+
+  const pointsCtx = document.getElementById('points-chart');
+  const positionCtx = document.getElementById('position-chart');
+  if (!pointsCtx || !positionCtx) return;
+
+  const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 16,
+          font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Inter, system-ui, sans-serif', size: 10 }, maxRotation: 45 }
+      }
+    }
+  };
+
+  // Points chart
+  pointsChart = new Chart(pointsCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: playerTimelines.map(pt => ({
+        label: pt.player.name,
+        data: pt.points,
+        borderColor: pt.player.color,
+        backgroundColor: pt.player.color + '20',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: false,
+      }))
+    },
+    options: {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: {
+          beginAtZero: true,
+          grid: { color: '#f3f4f6' },
+          ticks: {
+            stepSize: 3,
+            font: { family: 'Inter, system-ui, sans-serif', size: 11 }
+          },
+          title: {
+            display: true,
+            text: 'Total Points',
+            font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: '600' }
+          }
+        }
+      }
+    }
+  });
+
+  // Position chart (inverted y-axis: 1st at top)
+  positionChart = new Chart(positionCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: PLAYERS.map((player, pi) => ({
+        label: player.name,
+        data: positionTimelines[pi],
+        borderColor: player.color,
+        backgroundColor: player.color + '20',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: false,
+      }))
+    },
+    options: {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: {
+          reverse: true,
+          min: 1,
+          max: PLAYERS.length,
+          grid: { color: '#f3f4f6' },
+          ticks: {
+            stepSize: 1,
+            font: { family: 'Inter, system-ui, sans-serif', size: 11 },
+            callback: (val) => {
+              const suffixes = { 1: 'st', 2: 'nd', 3: 'rd' };
+              return val + (suffixes[val] || 'th');
+            }
+          },
+          title: {
+            display: true,
+            text: 'Position',
+            font: { family: 'Inter, system-ui, sans-serif', size: 12, weight: '600' }
+          }
+        }
+      }
+    }
+  });
 }
 
 // ============================================================
