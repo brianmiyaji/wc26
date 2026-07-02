@@ -324,7 +324,7 @@ function renderLeaderboard(scores) {
         </div>
         <div class="text-right shrink-0">
           <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L &middot; ${formatPPKY(calcPPKY(player.totalPoints, player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0)))} PPKY</div>
+          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L &middot; ${formatEFF(calcEFF(player.totalPoints, player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0)))} EFF</div>
         </div>
       </div>
     `;
@@ -360,7 +360,7 @@ function renderPlayerCards(scores) {
     }).join('');
 
     const totalSpent = player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0);
-    const playerPPKY = calcPPKY(player.totalPoints, totalSpent);
+    const playerEFF = calcEFF(player.totalPoints, totalSpent);
 
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -370,11 +370,11 @@ function renderPlayerCards(scores) {
           </div>
           <div>
             <div class="font-bold text-gray-900">${player.name}</div>
-            <div class="text-sm text-gray-500">${player.teams.length} teams &middot; &yen;${totalSpent.toLocaleString()}</div>
+            <div class="text-sm text-gray-500">${player.teams.length} teams</div>
           </div>
           <div class="ml-auto text-right">
             <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-            <div class="text-xs text-gray-400">pts &middot; ${formatPPKY(playerPPKY)} PPKY</div>
+            <div class="text-xs text-gray-400">pts &middot; ${formatEFF(playerEFF)} EFF</div>
           </div>
         </div>
         <div class="p-3 divide-y divide-gray-50">
@@ -569,7 +569,7 @@ function renderTeamStandings(scores) {
     const gd = team.goalsFor - team.goalsAgainst;
     const chevron = `<span class="text-gray-300 text-xs">${expanded ? '&#9660;' : '&#9654;'}</span>`;
     const price = TEAM_PRICES[team.name] || 0;
-    const ppky = calcPPKY(team.totalPoints, price);
+    const ppky = calcEFF(team.totalPoints, price);
 
     let matchHistory = '';
     if (expanded) {
@@ -603,7 +603,7 @@ function renderTeamStandings(scores) {
         <td class="text-center py-3 px-2 text-sm font-medium ${gd > 0 ? 'text-green-600' : gd < 0 ? 'text-red-500' : 'text-gray-400'}">${gd > 0 ? '+' : ''}${gd}</td>
         <td class="text-right py-3 px-2 text-sm font-bold text-gray-900">${team.totalPoints}</td>
         <td class="text-right py-3 px-2 text-sm text-gray-500">&yen;${price.toLocaleString()}</td>
-        <td class="text-right py-3 px-4 text-sm font-medium ${ppky > 0 ? 'text-blue-600' : 'text-gray-300'}">${formatPPKY(ppky)}</td>
+        <td class="text-right py-3 px-4 text-sm font-medium ${ppky > 0 ? 'text-blue-600' : 'text-gray-300'}">${formatEFF(ppky)}</td>
       </tr>
       ${matchHistory}
     `;
@@ -627,7 +627,7 @@ function renderTeamStandings(scores) {
             <th class="text-center py-3 px-2">GD</th>
             <th class="text-right py-3 px-2">Pts</th>
             <th class="text-right py-3 px-2">Price</th>
-            <th class="text-right py-3 px-4">PPKY</th>
+            <th class="text-right py-3 px-4">EFF</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">

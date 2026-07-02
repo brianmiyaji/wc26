@@ -172,13 +172,13 @@ const TEAM_PRICES = {
   'Czech Republic': 1000,
 };
 
-// Calculate PPKY (Points Per Thousand Yen) - points / price * 1000
-function calcPPKY(points, price) {
+// Calculate EFF (Points Per Thousand Yen) - points / price * 1000
+function calcEFF(points, price) {
   if (!price || points === 0) return 0;
   return points / price * 1000;
 }
 
-function formatPPKY(ppky) {
+function formatEFF(ppky) {
   if (ppky === 0) return '0';
   const rounded = Math.round(ppky * 10) / 10;
   return rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1);
