@@ -15,6 +15,8 @@ let filterStage = 'all';
 let filterPlayer = 'all';
 let expandedTeams = new Set();
 let autoRefreshInterval = null;
+let teamSortCol = 'totalPoints';
+let teamSortAsc = false;
 
 // ============================================================
 // Data Fetching
@@ -353,7 +355,7 @@ function renderPlayerCards(scores) {
           </div>
           <div class="flex items-center gap-3">
             ${record}
-            <span class="font-bold text-sm ${team.totalPoints > 0 ? 'text-gray-900' : 'text-gray-300'}">${team.totalPoints} pts</span>
+            <span class="font-bold text-sm ${team.totalPoints > 0 ? 'text-gray-900' : 'text-gray-300'}">${team.totalPoints}</span>
           </div>
         </div>
       `;
@@ -374,7 +376,7 @@ function renderPlayerCards(scores) {
           </div>
           <div class="ml-auto text-right">
             <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-            <div class="text-xs text-gray-400">pts &middot; ${formatEFF(playerEFF)} EFF</div>
+            <div class="text-xs text-gray-400">${formatEFF(playerEFF)} EFF</div>
           </div>
         </div>
         <div class="p-3 divide-y divide-gray-50">
@@ -560,7 +562,26 @@ function renderTeamStandings(scores) {
     }
   }
 
-  allTeams.sort((a, b) => b.totalPoints - a.totalPoints || b.wins - a.wins || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
+  // Sort teams
+  allTeams.sort((a, b) => {
+    let va, vb;
+    switch (teamSortCol) {
+      case 'name': va = a.name; vb = b.name; return teamSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      case 'player': va = a.player.name; vb = b.player.name; return teamSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      case 'played': va = a.matches.length; vb = b.matches.length; break;
+      case 'wins': va = a.wins; vb = b.wins; break;
+      case 'draws': va = a.draws; vb = b.draws; break;
+      case 'losses': va = a.losses; vb = b.losses; break;
+      case 'gf': va = a.goalsFor; vb = b.goalsFor; break;
+      case 'ga': va = a.goalsAgainst; vb = b.goalsAgainst; break;
+      case 'gd': va = a.goalsFor - a.goalsAgainst; vb = b.goalsFor - b.goalsAgainst; break;
+      case 'price': va = TEAM_PRICES[a.name] || 0; vb = TEAM_PRICES[b.name] || 0; break;
+      case 'eff': va = calcEFF(a.totalPoints, TEAM_PRICES[a.name] || 0); vb = calcEFF(b.totalPoints, TEAM_PRICES[b.name] || 0); break;
+      default: va = a.totalPoints; vb = b.totalPoints; break;
+    }
+    const diff = teamSortAsc ? va - vb : vb - va;
+    return diff || b.totalPoints - a.totalPoints || b.wins - a.wins;
+  });
 
   const tableRows = allTeams.map((team, i) => {
     const flag = getFlagImg(team.name);
@@ -616,18 +637,18 @@ function renderTeamStandings(scores) {
           <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
             <th class="py-3 px-3 w-8"></th>
             <th class="text-left py-3 px-2">#</th>
-            <th class="text-left py-3 px-3">Team</th>
-            <th class="text-left py-3 px-3">Player</th>
-            <th class="text-center py-3 px-2">P</th>
-            <th class="text-center py-3 px-2">W</th>
-            <th class="text-center py-3 px-2">D</th>
-            <th class="text-center py-3 px-2">L</th>
-            <th class="text-center py-3 px-2">GF</th>
-            <th class="text-center py-3 px-2">GA</th>
-            <th class="text-center py-3 px-2">GD</th>
-            <th class="text-right py-3 px-2">Pts</th>
-            <th class="text-right py-3 px-2">Price</th>
-            <th class="text-right py-3 px-4">EFF</th>
+            ${sortableHeader('name', 'Team', 'text-left py-3 px-3')}
+            ${sortableHeader('player', 'Player', 'text-left py-3 px-3')}
+            ${sortableHeader('played', 'P', 'text-center py-3 px-2')}
+            ${sortableHeader('wins', 'W', 'text-center py-3 px-2')}
+            ${sortableHeader('draws', 'D', 'text-center py-3 px-2')}
+            ${sortableHeader('losses', 'L', 'text-center py-3 px-2')}
+            ${sortableHeader('gf', 'GF', 'text-center py-3 px-2')}
+            ${sortableHeader('ga', 'GA', 'text-center py-3 px-2')}
+            ${sortableHeader('gd', 'GD', 'text-center py-3 px-2')}
+            ${sortableHeader('totalPoints', 'Pts', 'text-right py-3 px-2')}
+            ${sortableHeader('price', 'Price', 'text-right py-3 px-2')}
+            ${sortableHeader('eff', 'EFF', 'text-right py-3 px-4')}
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -669,6 +690,28 @@ function renderTeamMatchHistory(team) {
       `;
     }).join('')}
   </div>`;
+}
+
+// ============================================================
+// Sortable Table Helpers
+// ============================================================
+
+function sortableHeader(col, label, classes) {
+  const isActive = teamSortCol === col;
+  const arrow = isActive ? (teamSortAsc ? ' &#9650;' : ' &#9660;') : '';
+  const activeClass = isActive ? 'text-blue-600' : '';
+  return `<th class="${classes} cursor-pointer hover:text-blue-500 select-none ${activeClass}" onclick="sortTeamsBy('${col}')">${label}${arrow}</th>`;
+}
+
+function sortTeamsBy(col) {
+  if (teamSortCol === col) {
+    teamSortAsc = !teamSortAsc;
+  } else {
+    teamSortCol = col;
+    teamSortAsc = col === 'name' || col === 'player'; // default ascending for text, descending for numbers
+  }
+  const scores = calculatePlayerScores(allMatches);
+  renderTeamStandings(scores);
 }
 
 // ============================================================
