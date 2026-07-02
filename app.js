@@ -289,10 +289,19 @@ function renderLeaderboard(scores) {
   const container = document.getElementById('leaderboard-content');
   const maxPoints = scores[0]?.totalPoints || 1;
 
+  // Calculate ranks with ties
+  const ranks = [];
+  let currentRank = 1;
+  for (let i = 0; i < scores.length; i++) {
+    if (i > 0 && scores[i].totalPoints < scores[i - 1].totalPoints) {
+      currentRank = i + 1;
+    }
+    ranks.push(currentRank);
+  }
+
   container.innerHTML = scores.map((player, i) => {
-    const rank = i + 1;
+    const rank = ranks[i];
     const barWidth = maxPoints > 0 ? (player.totalPoints / maxPoints) * 100 : 0;
-    const crownIcon = rank === 1 && player.totalPoints > 0 ? '<span class="text-yellow-500 mr-1">&#9818;</span>' : '';
     const rankBadge = rank <= 3
       ? `<span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-amber-700'}">${rank}</span>`
       : `<span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-gray-400 bg-gray-100">${rank}</span>`;
@@ -305,7 +314,6 @@ function renderLeaderboard(scores) {
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            ${crownIcon}
             <span class="font-semibold text-gray-900">${player.name}</span>
             <span class="text-xs text-gray-400">${player.teams.length} teams</span>
           </div>
