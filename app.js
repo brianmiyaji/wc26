@@ -746,10 +746,10 @@ function renderGroups() {
         const playerBadge = player
           ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white" style="background-color: ${player.color}">${player.initials}</span>`
           : '';
-        const qualified = i < 2 && s.played === 3 ? 'border-l-2 border-green-400' : i >= 2 && s.played === 3 ? 'border-l-2 border-red-300' : '';
+        const qualifiedStyle = i < 2 && s.played === 3 && player ? `border-left: 3px solid ${player.color}` : i >= 2 && s.played === 3 ? 'border-left: 3px solid #fca5a5' : '';
 
         return `
-          <tr class="${qualified}">
+          <tr style="${qualifiedStyle}">
             <td class="py-1.5 px-2">
               <div class="flex items-center gap-1.5">
                 ${flag}
@@ -1054,9 +1054,12 @@ function renderBracketMatch(match) {
     const penLabel = display.penalties ? ` <span class="text-xs text-gray-400">(${display.penalties[0]}-${display.penalties[1]}p)</span>` : '';
     const etLabel = match.score.et && !display.penalties ? ' <span class="text-xs text-gray-400">aet</span>' : '';
 
+    const winnerPlayer = t1Win ? player1 : t2Win ? player2 : null;
+    const barStyle = winnerPlayer ? `border-left: 3px solid ${winnerPlayer.color}` : '';
+
     return `
-      <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden text-sm">
-        <div class="flex items-center justify-between px-3 py-2 ${t1Win ? 'bg-green-50' : ''} border-b border-gray-50">
+      <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden text-sm" style="${barStyle}">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-gray-50">
           <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag1}
             <span class="${t1Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName1}</span>
@@ -1064,7 +1067,7 @@ function renderBracketMatch(match) {
           </div>
           <span class="font-bold ${t1Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.home}</span>
         </div>
-        <div class="flex items-center justify-between px-3 py-2 ${t2Win ? 'bg-green-50' : ''}">
+        <div class="flex items-center justify-between px-3 py-2">
           <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag2}
             <span class="${t2Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName2}</span>
