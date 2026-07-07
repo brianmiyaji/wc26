@@ -746,25 +746,28 @@ function renderGroups() {
         const playerBadge = player
           ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white" style="background-color: ${player.color}">${player.initials}</span>`
           : '';
-        const qualifiedStyle = i < 2 && s.played === 3 && player ? `border-left: 3px solid ${player.color}` : '';
+        const eliminated = i >= 2 && s.played === 3;
+        const textClass = eliminated ? 'text-gray-400' : 'text-gray-600';
+        const nameClass = eliminated ? 'text-gray-400' : 'text-gray-900';
+        const ptsClass = eliminated ? 'text-gray-400' : 'text-gray-900';
 
         return `
-          <tr style="${qualifiedStyle}">
+          <tr>
             <td class="py-1.5 px-2">
               <div class="flex items-center gap-1.5">
                 ${flag}
-                <span class="text-sm font-medium text-gray-900">${s.team}</span>
+                <span class="text-sm font-medium ${nameClass}">${s.team}</span>
                 ${playerBadge}
               </div>
             </td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.played}</td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.w}</td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.d}</td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.l}</td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.gf}</td>
-            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.ga}</td>
-            <td class="text-center py-1.5 px-1 text-sm font-medium ${s.gd > 0 ? 'text-green-600' : s.gd < 0 ? 'text-red-500' : 'text-gray-400'}">${s.gd > 0 ? '+' : ''}${s.gd}</td>
-            <td class="text-center py-1.5 px-1 text-sm font-bold text-gray-900">${s.pts}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.played}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.w}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.d}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.l}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.gf}</td>
+            <td class="text-center py-1.5 px-1 text-sm ${textClass}">${s.ga}</td>
+            <td class="text-center py-1.5 px-1 text-sm font-medium ${eliminated ? 'text-gray-400' : s.gd > 0 ? 'text-green-600' : s.gd < 0 ? 'text-red-500' : 'text-gray-400'}">${s.gd > 0 ? '+' : ''}${s.gd}</td>
+            <td class="text-center py-1.5 px-1 text-sm font-bold ${ptsClass}">${s.pts}</td>
           </tr>
         `;
       }).join('');
