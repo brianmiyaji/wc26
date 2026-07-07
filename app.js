@@ -950,9 +950,8 @@ function renderBracketMatch(match) {
   const p1Badge = player1 ? `<span class="text-xs px-1 py-0.5 rounded text-white leading-none" style="background-color: ${player1.color}">${player1.initials}</span>` : '';
   const p2Badge = player2 ? `<span class="text-xs px-1 py-0.5 rounded text-white leading-none" style="background-color: ${player2.color}">${player2.initials}</span>` : '';
 
-  // Format placeholder names nicely
-  const displayName1 = isRealTeam(match.team1) ? team1 : match.team1.replace(/^W/, 'W ').replace(/^L/, 'L ');
-  const displayName2 = isRealTeam(match.team2) ? team2 : match.team2.replace(/^W/, 'W ').replace(/^L/, 'L ');
+  const displayName1 = isRealTeam(match.team1) ? team1 : 'TBD';
+  const displayName2 = isRealTeam(match.team2) ? team2 : 'TBD';
 
   if (isFinished(match)) {
     const display = getDisplayScore(match);
