@@ -864,11 +864,62 @@ function renderBracket() {
     rounds[r].sort((a, b) => (a.num || 0) - (b.num || 0));
   }
 
-  const r16 = rounds['Round of 16'] || [];
+  const r16Raw = rounds['Round of 16'] || [];
   const qf = rounds['Quarter-final'] || [];
   const sf = rounds['Semi-final'] || [];
   const final = rounds['Final'] || [];
   const third = rounds['Match for third place'] || [];
+
+  // Reorder R16 to align with QF bracket pairings.
+  // QFs are sorted by match num. For each QF, we need to find which two R16
+  // matches feed into it by checking if the QF teams came from those R16 matches.
+  const r16ByNum = {};
+  for (const m of r16Raw) r16ByNum[m.num] = m;
+
+  // Build the correct R16 order based on QF feeders
+  // The bracket structure: QF97←{R89,R90}, QF98←{R93,R94}, QF99←{R91,R92}, QF100←{R95,R96}
+  // We determine this by finding which R16 winners match QF team names
+  const r16 = [];
+  if (qf.length > 0 && r16Raw.length > 0) {
+    for (const qfMatch of qf) {
+      const qfTeams = [normalizeTeamName(qfMatch.team1), normalizeTeamName(qfMatch.team2)];
+      const feeders = [];
+      for (const r16m of r16Raw) {
+        if (!isFinished(r16m)) continue;
+        const winner = getMatchWinner(r16m);
+        const winnerName = winner === 'team1' ? normalizeTeamName(r16m.team1) : normalizeTeamName(r16m.team2);
+        if (qfTeams.includes(winnerName)) {
+          feeders.push(r16m);
+        }
+      }
+      // Also check placeholder references like "W93" which means winner of match 93
+      if (feeders.length < 2) {
+        for (const tName of [qfMatch.team1, qfMatch.team2]) {
+          const refMatch = tName.match(/^W(\d+)$/);
+          if (refMatch) {
+            const refNum = parseInt(refMatch[1]);
+            const feederMatch = r16ByNum[refNum];
+            if (feederMatch && !feeders.find(f => f.num === feederMatch.num)) {
+              feeders.push(feederMatch);
+            }
+          }
+        }
+      }
+
+      if (feeders.length === 2) {
+        feeders.sort((a, b) => a.num - b.num);
+        r16.push(...feeders);
+      }
+    }
+    // Add any R16 matches not yet placed (unfinished ones whose QF has placeholder names)
+    for (const m of r16Raw) {
+      if (!r16.find(r => r.num === m.num)) {
+        r16.push(m);
+      }
+    }
+  } else {
+    r16.push(...r16Raw);
+  }
 
   // Build bracket with connectors
   // R16 (8) -> QF (4) -> SF (2) -> Final (1)
