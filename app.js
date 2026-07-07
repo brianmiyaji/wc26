@@ -1054,13 +1054,9 @@ function renderBracketMatch(match) {
     const penLabel = display.penalties ? ` <span class="text-xs text-gray-400">(${display.penalties[0]}-${display.penalties[1]}p)</span>` : '';
     const etLabel = match.score.et && !display.penalties ? ' <span class="text-xs text-gray-400">aet</span>' : '';
 
-    const t1Bar = t1Win && player1 ? `<div class="w-1 rounded-full self-stretch shrink-0" style="background-color: ${player1.color}"></div>` : '';
-    const t2Bar = t2Win && player2 ? `<div class="w-1 rounded-full self-stretch shrink-0" style="background-color: ${player2.color}"></div>` : '';
-
     return `
       <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden text-sm">
-        <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-50">
-          ${t1Bar}
+        <div class="flex items-center justify-between px-3 py-2 border-b border-gray-50">
           <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag1}
             <span class="${t1Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName1}</span>
@@ -1068,8 +1064,7 @@ function renderBracketMatch(match) {
           </div>
           <span class="font-bold ${t1Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.home}</span>
         </div>
-        <div class="flex items-center gap-2 px-3 py-2">
-          ${t2Bar}
+        <div class="flex items-center justify-between px-3 py-2">
           <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag2}
             <span class="${t2Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName2}</span>
