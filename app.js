@@ -981,7 +981,7 @@ function renderBracket() {
   }
 
   const desktopBracket = `
-    <div class="bracket hidden md:flex pb-4" style="min-height: 700px; min-width: 1100px;">
+    <div class="bracket hidden md:flex pb-4" style="min-height: 800px; min-width: 1200px;">
       ${r32.length > 0 ? renderRoundColumn(r32, 'Round of 32') : ''}
       ${r32.length > 0 && r16.length > 0 ? renderConnectors(8) : ''}
       ${r16.length > 0 && r32.length > 0 ? renderLeftConnectors(8) : ''}
@@ -996,19 +996,19 @@ function renderBracket() {
       ${final.length > 0 ? renderLeftConnectors(1) : ''}
       <div class="bracket-round">
         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 text-center">Final</div>
-        <div class="flex flex-col justify-center flex-1 gap-6">
-          <div class="flex-1 flex items-center">
-            <div class="bracket-match w-full">${final.length > 0 ? renderBracketMatch(final[0]) : ''}</div>
+        <div class="flex flex-col justify-around flex-1 gap-1">
+          <div class="bracket-match-wrapper flex-1 flex items-center">
+            <div class="bracket-match">${final.length > 0 ? renderBracketMatch(final[0]) : ''}</div>
           </div>
-          ${third.length > 0 ? `
-            <div>
-              <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">3rd Place</div>
-              <div class="bracket-match">${renderBracketMatch(third[0])}</div>
-            </div>
-          ` : ''}
         </div>
       </div>
     </div>
+    ${third.length > 0 ? `
+      <div class="hidden md:block mt-6">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">3rd Place</div>
+        <div style="max-width: 200px">${renderBracketMatch(third[0])}</div>
+      </div>
+    ` : ''}
   `;
 
   const mobileBracket = `
@@ -1038,13 +1038,13 @@ function renderBracket() {
 function renderBracketMatch(match) {
   const team1 = isRealTeam(match.team1) ? normalizeTeamName(match.team1) : match.team1;
   const team2 = isRealTeam(match.team2) ? normalizeTeamName(match.team2) : match.team2;
-  const flag1 = isRealTeam(match.team1) ? getFlagImg(team1, 'inline-block w-4 h-3 object-cover rounded-sm') : '';
-  const flag2 = isRealTeam(match.team2) ? getFlagImg(team2, 'inline-block w-4 h-3 object-cover rounded-sm') : '';
+  const flag1 = isRealTeam(match.team1) ? getFlagImg(team1, 'inline-block w-5 h-3.5 object-cover rounded-sm') : '';
+  const flag2 = isRealTeam(match.team2) ? getFlagImg(team2, 'inline-block w-5 h-3.5 object-cover rounded-sm') : '';
   const player1 = isRealTeam(match.team1) ? TEAM_TO_PLAYER[team1] : null;
   const player2 = isRealTeam(match.team2) ? TEAM_TO_PLAYER[team2] : null;
 
-  const p1Badge = player1 ? `<span class="leading-none rounded text-white" style="font-size:9px;padding:2px 4px;background-color:${player1.color}">${player1.initials}</span>` : '';
-  const p2Badge = player2 ? `<span class="leading-none rounded text-white" style="font-size:9px;padding:2px 4px;background-color:${player2.color}">${player2.initials}</span>` : '';
+  const p1Badge = player1 ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white leading-none" style="background-color: ${player1.color}">${player1.initials}</span>` : '';
+  const p2Badge = player2 ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white leading-none" style="background-color: ${player2.color}">${player2.initials}</span>` : '';
 
   const displayName1 = isRealTeam(match.team1) ? team1 : 'TBD';
   const displayName2 = isRealTeam(match.team2) ? team2 : 'TBD';
@@ -1058,38 +1058,38 @@ function renderBracketMatch(match) {
     const etLabel = match.score.et && !display.penalties ? ' <span class="text-xs text-gray-400">aet</span>' : '';
 
     return `
-      <div class="bg-white rounded border border-gray-100 shadow-sm overflow-hidden" style="font-size:12px">
-        <div class="flex items-center justify-between px-2 py-1 border-b border-gray-50">
-          <div class="flex items-center gap-1 flex-1 min-w-0">
+      <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden text-sm">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-gray-50">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag1}
             <span class="${t1Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName1}</span>
             ${p1Badge}
           </div>
-          <span class="font-bold ${t1Win ? 'text-gray-900' : 'text-gray-400'} ml-1">${display.home}</span>
+          <span class="font-bold ${t1Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.home}</span>
         </div>
-        <div class="flex items-center justify-between px-2 py-1">
-          <div class="flex items-center gap-1 flex-1 min-w-0">
+        <div class="flex items-center justify-between px-3 py-2">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag2}
             <span class="${t2Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName2}</span>
             ${p2Badge}
           </div>
-          <span class="font-bold ${t2Win ? 'text-gray-900' : 'text-gray-400'} ml-1">${display.away}</span>
+          <span class="font-bold ${t2Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.away}</span>
         </div>
-        ${penLabel || etLabel ? `<div class="text-center text-gray-400 py-0.5 bg-gray-50 border-t border-gray-50" style="font-size:10px">${penLabel}${etLabel}</div>` : ''}
+        ${penLabel || etLabel ? `<div class="text-center text-xs text-gray-400 py-0.5 bg-gray-50 border-t border-gray-50">${penLabel}${etLabel}</div>` : ''}
       </div>
     `;
   } else {
     return `
-      <div class="bg-white rounded border border-gray-200 border-dashed shadow-sm overflow-hidden" style="font-size:12px">
-        <div class="flex items-center justify-between px-2 py-1 border-b border-gray-50">
-          <div class="flex items-center gap-1 flex-1 min-w-0">
+      <div class="bg-white rounded-lg border border-gray-200 border-dashed shadow-sm overflow-hidden text-sm">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-gray-50">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag1}
             <span class="text-gray-500 truncate">${displayName1}</span>
             ${p1Badge}
           </div>
         </div>
-        <div class="flex items-center justify-between px-2 py-1">
-          <div class="flex items-center gap-1 flex-1 min-w-0">
+        <div class="flex items-center justify-between px-3 py-2">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
             ${flag2}
             <span class="text-gray-500 truncate">${displayName2}</span>
             ${p2Badge}
