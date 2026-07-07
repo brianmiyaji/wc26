@@ -36,7 +36,7 @@ const PLAYERS = [
     name: 'DSK',
     initials: 'DSK',
     color: '#EF4444',
-    teams: ['Panama', 'Saudi Arabia', 'England', 'Haiti', 'Argentina', 'Bosnia & Herzegovina']
+    teams: ['Panama', 'Saudi Arabia', 'England', 'Haiti', 'Argentina', 'Bosnia']
   },
   {
     id: 'patrick',
@@ -56,7 +56,8 @@ const API_TO_DISPLAY = {
   "Côte d'Ivoire": 'Ivory Coast',
   'Czechia': 'Czech Republic',
   'Türkiye': 'Turkey',
-  'Bosnia and Herzegovina': 'Bosnia & Herzegovina',
+  'Bosnia and Herzegovina': 'Bosnia',
+  'Bosnia & Herzegovina': 'Bosnia',
   'Korea, Republic of': 'South Korea',
   'Iran, Islamic Republic of': 'Iran',
   'Cape Verde Islands': 'Cape Verde',
@@ -107,7 +108,7 @@ const FLAG_CODES = {
   'England': 'gb-eng',
   'Haiti': 'ht',
   'Argentina': 'ar',
-  'Bosnia & Herzegovina': 'ba',
+  'Bosnia': 'ba',
   'Algeria': 'dz',
   'Scotland': 'gb-sct',
   'Cape Verde': 'cv',
@@ -159,7 +160,7 @@ const TEAM_PRICES = {
   'England': 4000,
   'Haiti': 500,
   'Argentina': 3000,
-  'Bosnia & Herzegovina': 400,
+  'Bosnia': 400,
   'Algeria': 400,
   'Scotland': 400,
   'Cape Verde': 300,
