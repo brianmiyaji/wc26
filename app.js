@@ -746,7 +746,7 @@ function renderGroups() {
         const playerBadge = player
           ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white" style="background-color: ${player.color}">${player.initials}</span>`
           : '';
-        const qualifiedStyle = i < 2 && s.played === 3 && player ? `border-left: 3px solid ${player.color}` : i >= 2 && s.played === 3 ? 'border-left: 3px solid #fca5a5' : '';
+        const qualifiedStyle = i < 2 && s.played === 3 && player ? `border-left: 3px solid ${player.color}` : '';
 
         return `
           <tr style="${qualifiedStyle}">
