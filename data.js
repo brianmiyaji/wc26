@@ -19,7 +19,7 @@ const PLAYERS = [
   },
   {
     id: 'julian',
-    name: 'Julian/Takumi',
+    name: 'Jules/Tak',
     initials: 'JT',
     color: '#8B5CF6',
     teams: ['Ivory Coast', 'Norway', 'Ecuador', 'Belgium', 'Senegal', 'Turkey', 'Uruguay']
