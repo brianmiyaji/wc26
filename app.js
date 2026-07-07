@@ -326,7 +326,7 @@ function renderLeaderboard(scores) {
         </div>
         <div class="text-right shrink-0">
           <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L &middot; ${formatEFF(calcEFF(player.totalPoints, player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0)))} EFF</div>
+          <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L</div>
         </div>
       </div>
     `;
@@ -361,9 +361,6 @@ function renderPlayerCards(scores) {
       `;
     }).join('');
 
-    const totalSpent = player.teamResults.reduce((s, t) => s + (TEAM_PRICES[t.name] || 0), 0);
-    const playerEFF = calcEFF(player.totalPoints, totalSpent);
-
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-gray-50 flex items-center gap-3">
@@ -376,7 +373,7 @@ function renderPlayerCards(scores) {
           </div>
           <div class="ml-auto text-right">
             <div class="text-2xl font-bold text-gray-900">${player.totalPoints}</div>
-            <div class="text-xs text-gray-400">${formatEFF(playerEFF)} EFF</div>
+            <div class="text-xs text-gray-400">${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L</div>
           </div>
         </div>
         <div class="p-3 divide-y divide-gray-50">
@@ -648,7 +645,7 @@ function renderTeamStandings(scores) {
             ${sortableHeader('gd', 'GD', 'text-center py-3 px-2')}
             ${sortableHeader('totalPoints', 'Pts', 'text-right py-3 px-2')}
             ${sortableHeader('price', 'Price', 'text-right py-3 px-2')}
-            ${sortableHeader('eff', 'EFF', 'text-right py-3 px-4')}
+            ${sortableHeader('eff', 'Value', 'text-right py-3 px-4')}
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
