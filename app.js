@@ -853,54 +853,88 @@ function renderBracket() {
   if (!container) return;
 
   // Organize knockout matches by round
-  const rounds = {
-    'Round of 32': [],
-    'Round of 16': [],
-    'Quarter-final': [],
-    'Semi-final': [],
-    'Match for third place': [],
-    'Final': [],
-  };
-
+  const rounds = {};
   for (const match of allMatches) {
     const round = match.round;
-    if (round && rounds[round] !== undefined) {
-      rounds[round].push(match);
-    }
+    if (!round || round.startsWith('Matchday')) continue;
+    if (!rounds[round]) rounds[round] = [];
+    rounds[round].push(match);
   }
-
-  // Sort each round by match number
   for (const r in rounds) {
     rounds[r].sort((a, b) => (a.num || 0) - (b.num || 0));
   }
 
-  // We show from Round of 16 onward
-  const bracketRounds = [
-    { key: 'Round of 16', label: 'Round of 16' },
-    { key: 'Quarter-final', label: 'Quarter-Finals' },
-    { key: 'Semi-final', label: 'Semi-Finals' },
-    { key: 'Final', label: 'Final' },
-    { key: 'Match for third place', label: '3rd Place' },
-  ];
+  const r16 = rounds['Round of 16'] || [];
+  const qf = rounds['Quarter-final'] || [];
+  const sf = rounds['Semi-final'] || [];
+  const final = rounds['Final'] || [];
+  const third = rounds['Match for third place'] || [];
+
+  // Build bracket with connectors
+  // R16 (8) -> QF (4) -> SF (2) -> Final (1)
+  // Each pair of matches feeds into the next round
+
+  function renderRoundColumn(matches, label, spacingClass) {
+    return `
+      <div class="bracket-round">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 text-center">${label}</div>
+        <div class="flex flex-col justify-around flex-1 ${spacingClass}">
+          ${matches.map(m => `
+            <div class="bracket-match-wrapper flex-1 flex items-center">
+              <div class="bracket-match">${renderBracketMatch(m)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderConnectors(count) {
+    // Renders vertical connectors that pair up matches
+    // count = number of pairs (e.g., 4 pairs for R16->QF)
+    const pairs = [];
+    for (let i = 0; i < count; i++) {
+      pairs.push(`
+        <div class="bracket-pair flex-1 flex flex-col">
+          <div class="flex-1 flex items-center"><div class="bracket-connector-right w-6"></div></div>
+          <div class="flex-1 flex items-center"><div class="bracket-connector-right w-6"></div></div>
+        </div>
+      `);
+    }
+    return `<div class="flex flex-col justify-around">${pairs.join('')}</div>`;
+  }
+
+  function renderLeftConnectors(count) {
+    return `<div class="flex flex-col justify-around">
+      ${Array(count).fill(`<div class="flex-1 flex items-center"><div class="bracket-connector-left w-6"></div></div>`).join('')}
+    </div>`;
+  }
 
   container.innerHTML = `
-    <div class="flex gap-6 min-w-[900px] pb-4">
-      ${bracketRounds.map((round, ri) => {
-        const matches = rounds[round.key] || [];
-        if (matches.length === 0) return '';
-
-        // For the final and 3rd place, combine them in one column
-        const isFinalCol = round.key === 'Final' || round.key === 'Match for third place';
-
-        return `
-          <div class="flex-1 min-w-[180px] ${round.key === 'Match for third place' ? 'min-w-[180px] flex-none' : ''}">
-            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 text-center">${round.label}</div>
-            <div class="space-y-3">
-              ${matches.map(m => renderBracketMatch(m)).join('')}
-            </div>
+    <div class="bracket min-w-[1100px] pb-4" style="min-height: 600px;">
+      ${renderRoundColumn(r16, 'Round of 16', 'gap-2')}
+      ${r16.length > 0 && qf.length > 0 ? renderConnectors(4) : ''}
+      ${qf.length > 0 ? renderLeftConnectors(4) : ''}
+      ${renderRoundColumn(qf, 'Quarter-Finals', 'gap-4')}
+      ${qf.length > 0 && sf.length > 0 ? renderConnectors(2) : ''}
+      ${sf.length > 0 ? renderLeftConnectors(2) : ''}
+      ${renderRoundColumn(sf, 'Semi-Finals', 'gap-8')}
+      ${sf.length > 0 && final.length > 0 ? renderConnectors(1) : ''}
+      ${final.length > 0 ? renderLeftConnectors(1) : ''}
+      <div class="bracket-round">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 text-center">Final</div>
+        <div class="flex flex-col justify-center flex-1 gap-6">
+          <div class="flex-1 flex items-center">
+            <div class="bracket-match w-full">${final.length > 0 ? renderBracketMatch(final[0]) : ''}</div>
           </div>
-        `;
-      }).join('')}
+          ${third.length > 0 ? `
+            <div>
+              <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">3rd Place</div>
+              <div class="bracket-match">${renderBracketMatch(third[0])}</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
     </div>
   `;
 }

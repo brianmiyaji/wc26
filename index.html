@@ -42,6 +42,55 @@
     .dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.2) !important; }
     .dark .bg-yellow-100 { background-color: rgba(234, 179, 8, 0.2) !important; }
     .dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; }
+    .dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; }
+
+    /* Bracket connector lines */
+    .bracket { display: flex; gap: 0; }
+    .bracket-round { display: flex; flex-direction: column; justify-content: center; position: relative; min-width: 200px; }
+    .bracket-match-wrapper { display: flex; align-items: center; position: relative; }
+    .bracket-match { flex: 1; min-width: 0; }
+    .bracket-connector-right { width: 24px; position: relative; flex-shrink: 0; }
+    .bracket-connector-left { width: 24px; position: relative; flex-shrink: 0; }
+
+    /* Right connector: horizontal line from match to vertical bar */
+    .bracket-connector-right::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 0;
+      border-top: 2px solid #d1d5db;
+    }
+
+    /* Vertical bar connecting two matches into one */
+    .bracket-pair { display: flex; flex-direction: column; position: relative; }
+    .bracket-pair::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      bottom: 25%;
+      width: 0;
+      border-right: 2px solid #d1d5db;
+    }
+
+    /* Left connector: horizontal line from vertical bar to next match */
+    .bracket-connector-left::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 0;
+      border-top: 2px solid #d1d5db;
+    }
+
+    .dark .bracket-connector-right::after,
+    .dark .bracket-pair::after,
+    .dark .bracket-connector-left::after {
+      border-color: #4b5563;
+    }
   </style>
   <script>
     // Apply dark mode before page renders to prevent flash
