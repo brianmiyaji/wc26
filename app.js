@@ -9,7 +9,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const JST_TZ = 'Asia/Tokyo';
 
 let allMatches = [];
-const VALID_TABS = ['leaderboard', 'players', 'results', 'upcoming', 'charts', 'teams'];
+const VALID_TABS = ['leaderboard', 'players', 'results', 'upcoming', 'groups', 'bracket', 'charts', 'teams'];
 let activeTab = 'leaderboard';
 let filterStage = 'all';
 let filterPlayer = 'all';
@@ -282,6 +282,8 @@ function renderApp() {
   renderLeaderboard(scores);
   renderPlayerCards(scores);
   renderMatches();
+  renderGroups();
+  renderBracket();
   renderCharts();
   renderTeamStandings(scores);
   updateLastRefresh();
@@ -687,6 +689,286 @@ function renderTeamMatchHistory(team) {
       `;
     }).join('')}
   </div>`;
+}
+
+// ============================================================
+// Groups
+// ============================================================
+
+function renderGroups() {
+  const container = document.getElementById('groups-content');
+  if (!container) return;
+
+  // Build group data: teams, standings, matches
+  const groupMap = {};
+  for (const match of allMatches) {
+    if (!match.group) continue;
+    if (!groupMap[match.group]) groupMap[match.group] = { matches: [], teams: new Set() };
+    groupMap[match.group].matches.push(match);
+    if (isRealTeam(match.team1)) groupMap[match.group].teams.add(normalizeTeamName(match.team1));
+    if (isRealTeam(match.team2)) groupMap[match.group].teams.add(normalizeTeamName(match.team2));
+  }
+
+  const groupNames = Object.keys(groupMap).sort();
+
+  container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    ${groupNames.map(groupName => {
+      const group = groupMap[groupName];
+      const teams = [...group.teams];
+
+      // Calculate standings for each team in this group
+      const standings = teams.map(team => {
+        let w = 0, d = 0, l = 0, gf = 0, ga = 0;
+        for (const m of group.matches) {
+          if (!isFinished(m)) continue;
+          const home = normalizeTeamName(m.team1);
+          const away = normalizeTeamName(m.team2);
+          const isHome = home === team;
+          const isAway = away === team;
+          if (!isHome && !isAway) continue;
+
+          const [hg, ag] = m.score.ft;
+          gf += isHome ? hg : ag;
+          ga += isHome ? ag : hg;
+
+          const winner = getMatchWinner(m);
+          if (winner === 'draw') d++;
+          else if ((isHome && winner === 'team1') || (isAway && winner === 'team2')) w++;
+          else l++;
+        }
+        return { team, w, d, l, gf, ga, gd: gf - ga, pts: w * 3 + d, played: w + d + l };
+      }).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+
+      // Render standings table
+      const standingsHtml = standings.map((s, i) => {
+        const flag = getFlagImg(s.team, 'inline-block w-5 h-3.5 object-cover rounded-sm');
+        const player = TEAM_TO_PLAYER[s.team];
+        const playerBadge = player
+          ? `<span class="text-xs px-1.5 py-0.5 rounded-full text-white" style="background-color: ${player.color}">${player.initials}</span>`
+          : '';
+        const qualified = i < 2 && s.played === 3 ? 'border-l-2 border-green-400' : i >= 2 && s.played === 3 ? 'border-l-2 border-red-300' : '';
+
+        return `
+          <tr class="${qualified}">
+            <td class="py-1.5 px-2">
+              <div class="flex items-center gap-1.5">
+                ${flag}
+                <span class="text-sm font-medium text-gray-900">${s.team}</span>
+                ${playerBadge}
+              </div>
+            </td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.played}</td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.w}</td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.d}</td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.l}</td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.gf}</td>
+            <td class="text-center py-1.5 px-1 text-sm text-gray-600">${s.ga}</td>
+            <td class="text-center py-1.5 px-1 text-sm font-medium ${s.gd > 0 ? 'text-green-600' : s.gd < 0 ? 'text-red-500' : 'text-gray-400'}">${s.gd > 0 ? '+' : ''}${s.gd}</td>
+            <td class="text-center py-1.5 px-1 text-sm font-bold text-gray-900">${s.pts}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Render matches
+      const matchesHtml = group.matches
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .map(m => {
+          const home = normalizeTeamName(m.team1);
+          const away = normalizeTeamName(m.team2);
+          const hFlag = getFlagImg(home, 'inline-block w-5 h-3.5 object-cover rounded-sm');
+          const aFlag = getFlagImg(away, 'inline-block w-5 h-3.5 object-cover rounded-sm');
+
+          if (isFinished(m)) {
+            const [hg, ag] = m.score.ft;
+            const winner = getMatchWinner(m);
+            const homeWin = winner === 'team1';
+            const awayWin = winner === 'team2';
+            return `
+              <div class="flex items-center justify-between py-1.5 text-sm">
+                <div class="flex items-center gap-1.5 flex-1">
+                  ${hFlag}
+                  <span class="${homeWin ? 'font-bold text-gray-900' : 'text-gray-500'}">${home}</span>
+                </div>
+                <span class="font-bold text-gray-900 px-2">${hg} - ${ag}</span>
+                <div class="flex items-center gap-1.5 flex-1 justify-end">
+                  <span class="${awayWin ? 'font-bold text-gray-900' : 'text-gray-500'}">${away}</span>
+                  ${aFlag}
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="flex items-center justify-between py-1.5 text-sm text-gray-400">
+                <div class="flex items-center gap-1.5 flex-1">${hFlag} ${home}</div>
+                <span class="px-2">vs</span>
+                <div class="flex items-center gap-1.5 flex-1 justify-end">${away} ${aFlag}</div>
+              </div>
+            `;
+          }
+        }).join('');
+
+      return `
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <h3 class="font-bold text-gray-900">${groupName}</h3>
+          </div>
+          <div class="px-3 py-2">
+            <table class="w-full">
+              <thead>
+                <tr class="text-xs text-gray-400 uppercase">
+                  <th class="text-left py-1 px-2">Team</th>
+                  <th class="text-center py-1 px-1">P</th>
+                  <th class="text-center py-1 px-1">W</th>
+                  <th class="text-center py-1 px-1">D</th>
+                  <th class="text-center py-1 px-1">L</th>
+                  <th class="text-center py-1 px-1">GF</th>
+                  <th class="text-center py-1 px-1">GA</th>
+                  <th class="text-center py-1 px-1">GD</th>
+                  <th class="text-center py-1 px-1">Pts</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                ${standingsHtml}
+              </tbody>
+            </table>
+          </div>
+          <div class="px-4 py-3 border-t border-gray-100">
+            <div class="text-xs font-semibold text-gray-400 uppercase mb-2">Matches</div>
+            <div class="divide-y divide-gray-50">
+              ${matchesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  </div>`;
+}
+
+// ============================================================
+// Bracket
+// ============================================================
+
+function renderBracket() {
+  const container = document.getElementById('bracket-content');
+  if (!container) return;
+
+  // Organize knockout matches by round
+  const rounds = {
+    'Round of 32': [],
+    'Round of 16': [],
+    'Quarter-final': [],
+    'Semi-final': [],
+    'Match for third place': [],
+    'Final': [],
+  };
+
+  for (const match of allMatches) {
+    const round = match.round;
+    if (round && rounds[round] !== undefined) {
+      rounds[round].push(match);
+    }
+  }
+
+  // Sort each round by match number
+  for (const r in rounds) {
+    rounds[r].sort((a, b) => (a.num || 0) - (b.num || 0));
+  }
+
+  // We show from Round of 16 onward
+  const bracketRounds = [
+    { key: 'Round of 16', label: 'Round of 16' },
+    { key: 'Quarter-final', label: 'Quarter-Finals' },
+    { key: 'Semi-final', label: 'Semi-Finals' },
+    { key: 'Final', label: 'Final' },
+    { key: 'Match for third place', label: '3rd Place' },
+  ];
+
+  container.innerHTML = `
+    <div class="flex gap-6 min-w-[900px] pb-4">
+      ${bracketRounds.map((round, ri) => {
+        const matches = rounds[round.key] || [];
+        if (matches.length === 0) return '';
+
+        // For the final and 3rd place, combine them in one column
+        const isFinalCol = round.key === 'Final' || round.key === 'Match for third place';
+
+        return `
+          <div class="flex-1 min-w-[180px] ${round.key === 'Match for third place' ? 'min-w-[180px] flex-none' : ''}">
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 text-center">${round.label}</div>
+            <div class="space-y-3">
+              ${matches.map(m => renderBracketMatch(m)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderBracketMatch(match) {
+  const team1 = isRealTeam(match.team1) ? normalizeTeamName(match.team1) : match.team1;
+  const team2 = isRealTeam(match.team2) ? normalizeTeamName(match.team2) : match.team2;
+  const flag1 = isRealTeam(match.team1) ? getFlagImg(team1, 'inline-block w-5 h-3.5 object-cover rounded-sm') : '';
+  const flag2 = isRealTeam(match.team2) ? getFlagImg(team2, 'inline-block w-5 h-3.5 object-cover rounded-sm') : '';
+  const player1 = isRealTeam(match.team1) ? TEAM_TO_PLAYER[team1] : null;
+  const player2 = isRealTeam(match.team2) ? TEAM_TO_PLAYER[team2] : null;
+
+  const p1Badge = player1 ? `<span class="text-xs px-1 py-0.5 rounded text-white leading-none" style="background-color: ${player1.color}">${player1.initials}</span>` : '';
+  const p2Badge = player2 ? `<span class="text-xs px-1 py-0.5 rounded text-white leading-none" style="background-color: ${player2.color}">${player2.initials}</span>` : '';
+
+  // Format placeholder names nicely
+  const displayName1 = isRealTeam(match.team1) ? team1 : match.team1.replace(/^W/, 'W ').replace(/^L/, 'L ');
+  const displayName2 = isRealTeam(match.team2) ? team2 : match.team2.replace(/^W/, 'W ').replace(/^L/, 'L ');
+
+  if (isFinished(match)) {
+    const display = getDisplayScore(match);
+    const winner = getMatchWinner(match);
+    const t1Win = winner === 'team1';
+    const t2Win = winner === 'team2';
+    const penLabel = display.penalties ? ` <span class="text-xs text-gray-400">(${display.penalties[0]}-${display.penalties[1]}p)</span>` : '';
+    const etLabel = match.score.et && !display.penalties ? ' <span class="text-xs text-gray-400">aet</span>' : '';
+
+    return `
+      <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden text-sm">
+        <div class="flex items-center justify-between px-3 py-2 ${t1Win ? 'bg-green-50' : ''} border-b border-gray-50">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+            ${flag1}
+            <span class="${t1Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName1}</span>
+            ${p1Badge}
+          </div>
+          <span class="font-bold ${t1Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.home}</span>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2 ${t2Win ? 'bg-green-50' : ''}">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+            ${flag2}
+            <span class="${t2Win ? 'font-bold text-gray-900' : 'text-gray-400'} truncate">${displayName2}</span>
+            ${p2Badge}
+          </div>
+          <span class="font-bold ${t2Win ? 'text-gray-900' : 'text-gray-400'} ml-2">${display.away}</span>
+        </div>
+        ${penLabel || etLabel ? `<div class="text-center text-xs text-gray-400 py-0.5 bg-gray-50 border-t border-gray-50">${penLabel}${etLabel}</div>` : ''}
+      </div>
+    `;
+  } else {
+    return `
+      <div class="bg-white rounded-lg border border-gray-200 border-dashed shadow-sm overflow-hidden text-sm">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-gray-50">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+            ${flag1}
+            <span class="text-gray-500 truncate">${displayName1}</span>
+            ${p1Badge}
+          </div>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+            ${flag2}
+            <span class="text-gray-500 truncate">${displayName2}</span>
+            ${p2Badge}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 // ============================================================
