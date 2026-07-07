@@ -981,7 +981,7 @@ function renderBracket() {
   }
 
   const desktopBracket = `
-    <div class="bracket hidden md:flex pb-4" style="min-height: 800px; min-width: 1200px;">
+    <div class="bracket hidden md:flex pb-4" style="min-height: 800px;">
       ${r32.length > 0 ? renderRoundColumn(r32, 'Round of 32') : ''}
       ${r32.length > 0 && r16.length > 0 ? renderConnectors(8) : ''}
       ${r16.length > 0 && r32.length > 0 ? renderLeftConnectors(8) : ''}
